@@ -11,6 +11,8 @@ tpm2_la_SOURCES = \
     src/tpm2-provider-types.h \
     src/tpm2-provider-x509.c \
     src/tpm2-provider-x509.h \
+    src/tpm2-provider-sessionmgmt.c \
+    src/tpm2-provider-sessionmgmt.h \
     src/tpm2-provider-rand.c \
     src/tpm2-provider-pkey.c \
     src/tpm2-provider-pkey.h \

@@ -174,6 +174,7 @@ static const TPM2B_PUBLIC primaryRsaTemplate = {
                              TPMA_OBJECT_RESTRICTED |
                              TPMA_OBJECT_DECRYPT |
                              TPMA_OBJECT_NODA |
+                             TPMA_OBJECT_SIGN_ENCRYPT |
                              TPMA_OBJECT_FIXEDTPM |
                              TPMA_OBJECT_FIXEDPARENT |
                              TPMA_OBJECT_SENSITIVEDATAORIGIN),
@@ -297,13 +298,27 @@ error1:
 int
 tpm2_build_primary(const OSSL_CORE_HANDLE *core, ESYS_CONTEXT *esys_ctx,
                    const TPMS_CAPABILITY_DATA *algorithms, ESYS_TR hierarchy,
-                   const TPM2B_DIGEST *auth, ESYS_TR *object)
+                   const TPM2B_DIGEST *auth, ESYS_TR *object,
+                   ESYS_TR *session_handle)
 {
     const TPM2B_PUBLIC *primaryTemplate = NULL;
     TSS2_RC r;
+    
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    r = Esys_TR_SetAuth(esys_ctx, hierarchy, auth);
-    TPM2_CHECK_RC(core, r, TPM2_ERR_CANNOT_CREATE_PRIMARY, goto error);
+    r = tpm2_start_auth_session(3, esys_ctx, 1, session_handle);
+    if (r != TPM2_RC_SUCCESS){
+        DBG("Error starting the HMAC session\n");
+    }else{
+        DBG("HANDLE_2: %u\n", *session_handle);
+    }
+    
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    // r = Esys_TR_SetAuth(esys_ctx, hierarchy, auth);
+    // TPM2_CHECK_RC(core, r, TPM2_ERR_CANNOT_CREATE_PRIMARY, goto error);
 
     if (tpm2_supports_algorithm(algorithms, TPM2_ALG_ECC))
         primaryTemplate = &primaryEccTemplate;
@@ -316,10 +331,19 @@ tpm2_build_primary(const OSSL_CORE_HANDLE *core, ESYS_CONTEXT *esys_ctx,
     }
 
     r = Esys_CreatePrimary(esys_ctx, hierarchy,
-                           ESYS_TR_PASSWORD, ESYS_TR_NONE, ESYS_TR_NONE,
+                           *session_handle, ESYS_TR_NONE, ESYS_TR_NONE,
                            &primarySensitive, primaryTemplate, &allOutsideInfo,
                            &allCreationPCR,
                            object, NULL, NULL, NULL, NULL);
+
+    
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Esys_FlushContext(esys_ctx, handle);
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    
     if (r == 0x000009a2) {
         TPM2_ERROR_raise(core, TPM2_ERR_AUTHORIZATION_FAILURE);
         goto error;

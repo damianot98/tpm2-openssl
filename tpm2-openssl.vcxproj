@@ -149,6 +149,7 @@
     <ClCompile Include="src\tpm2-provider-digest.c" />
     <ClCompile Include="src\tpm2-provider-encoder.c" />
     <ClCompile Include="src\tpm2-provider-keyexch.c" />
+    <ClCompile Include="src\tpm2-provider-sessionmgmt.c" />
     <ClCompile Include="src\tpm2-provider-keymgmt-ec.c" />
     <ClCompile Include="src\tpm2-provider-keymgmt-rsa.c" />
     <ClCompile Include="src\tpm2-provider-pkey.c" />
@@ -162,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\tpm2-provider-digest.h" />
+    <ClInclude Include="src\tpm2-provider-sessionmgmt.h" />
     <ClInclude Include="src\tpm2-provider-pkey.h" />
     <ClInclude Include="src\tpm2-provider-types.h" />
     <ClInclude Include="src\tpm2-provider-x509.h" />

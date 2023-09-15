@@ -151,6 +151,9 @@ tpm2_cipher_init(TPM2_CIPHER_CTX *cctx,
                  const OSSL_PARAM params[])
 {
 
+    ESYS_TR hmac_handle;
+    ESYS_TR policy_handle;
+    
     if (key != NULL && keylen > 0) {
         ESYS_TR parent = ESYS_TR_NONE;
         int res;
@@ -159,7 +162,7 @@ tpm2_cipher_init(TPM2_CIPHER_CTX *cctx,
             cctx->decrypt ? "DE" : "EN", keylen);
 
         if (!tpm2_build_primary(cctx->core, cctx->esys_ctx, cctx->capability.algorithms,
-                                ESYS_TR_RH_NULL, NULL, &parent))
+                                ESYS_TR_RH_NULL, NULL, &parent, &hmac_handle))
             return 0;
 
         res = tpm2_load_external_key(cctx, parent, key, keylen);

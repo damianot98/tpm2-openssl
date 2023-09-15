@@ -8,6 +8,7 @@
 #include <openssl/pem.h>
 
 #include "tpm2-provider.h"
+#include "tpm2-provider-sessionmgmt.h"
 
 #define TSSPRIVKEY_PEM_STRING "TSS2 PRIVATE KEY"
 
@@ -34,7 +35,8 @@ tpm2_load_parent(const OSSL_CORE_HANDLE *core, ESYS_CONTEXT *esys_ctx,
 int
 tpm2_build_primary(const OSSL_CORE_HANDLE *core, ESYS_CONTEXT *esys_ctx,
                    const TPMS_CAPABILITY_DATA *capability, ESYS_TR hierarchy,
-                   const TPM2B_DIGEST *auth, ESYS_TR *object);
+                   const TPM2B_DIGEST *auth, ESYS_TR *object,
+                   ESYS_TR *session_handle);
 
 const char *
 tpm2_openssl_type(TPM2_KEYDATA *keydata);

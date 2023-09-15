@@ -247,6 +247,10 @@ tpm2_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     TPM2B_PRIVATE *keyPrivate = NULL;
     TPM2_PKEY *pkey = NULL;
     TSS2_RC r = TSS2_RC_SUCCESS;
+    ESYS_TR hmac_handle;
+    ESYS_TR policy_handle;
+
+
 
     DBG("RSA GEN%s %i bits\n",
         gen->inSensitive.sensitive.userAuth.size > 0 ? " with user-auth" : "",
@@ -274,16 +278,57 @@ tpm2_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     } else {
         DBG("RSA GEN parent: primary 0x%x\n", TPM2_RH_OWNER);
         if (!tpm2_build_primary(pkey->core, pkey->esys_ctx, pkey->capability.algorithms,
-                                ESYS_TR_RH_OWNER, &gen->parentAuth, &parent))
+                                ESYS_TR_RH_OWNER, &gen->parentAuth, &parent, &hmac_handle))
             goto error;
     }
 
     TPM2B_DATA outside_info = { .size = 0 };
     TPML_PCR_SELECTION creation_pcr = { .count = 0 };
 
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("HANDLE_3:%u\n\n", hmac_handle);
+
+    // Start a new session of type POLICY this time
+    r = tpm2_start_auth_session(2, gen->esys_ctx, 1, &policy_handle);    
+    if (r != TPM2_RC_SUCCESS){
+        DBG("Error during the creation of the Policy Session\n");
+        exit(-1);
+    }else{
+        DBG("Policy Session successfully created\n");
+    }
+
+    
+    // Create the policy session depending on the value of the PCR-23
+    TPM2B_DIGEST policy_digest = {
+        .size = 0,
+        .buffer = {}
+    };
+
+    r = tpm2_create_policy_digest(23, gen->esys_ctx, policy_handle, &policy_digest);
+
+    if (r != TPM2_RC_SUCCESS){
+        DBG("Error when creating the Policy Digest\n");
+        exit(-1);
+    }else{
+        DBG("Policy Digest creation successful\n");
+    }
+
+    DBG("Size_1: %d\n", policy_digest.size);
+
+    // Change the inSensitive field, in order to set the value of the authentication policy equal to the policy digest
+
+    gen->inPublic.publicArea.authPolicy.size = policy_digest.size;
+    memcpy(gen->inPublic.publicArea.authPolicy.buffer, policy_digest.buffer, policy_digest.size);
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
     /* older TPM2 chips do not support Esys_CreateLoaded */
     r = Esys_Create(gen->esys_ctx, parent,
-                    ESYS_TR_PASSWORD, ESYS_TR_NONE, ESYS_TR_NONE,
+                    hmac_handle, ESYS_TR_NONE, ESYS_TR_NONE,
                     &gen->inSensitive, &gen->inPublic, &outside_info, &creation_pcr,
                     &keyPrivate, &keyPublic, NULL, NULL, NULL);
     TPM2_CHECK_RC(gen->core, r, TPM2_ERR_CANNOT_CREATE_KEY, goto error);
@@ -293,11 +338,19 @@ tpm2_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     pkey->data.priv = *keyPrivate;
 
     r = Esys_Load(gen->esys_ctx, parent,
-                  ESYS_TR_PASSWORD, ESYS_TR_NONE, ESYS_TR_NONE,
+                  hmac_handle, ESYS_TR_NONE, ESYS_TR_NONE,
                   keyPrivate, keyPublic, &pkey->object);
     free(keyPublic);
     free(keyPrivate);
     TPM2_CHECK_RC(gen->core, r, TPM2_ERR_CANNOT_CREATE_KEY, goto error);
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    Esys_FlushContext(pkey->esys_ctx, hmac_handle);
+    Esys_FlushContext(gen->esys_ctx, policy_handle);
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     if (gen->parentHandle && gen->parentHandle != TPM2_RH_OWNER)
         Esys_TR_Close(gen->esys_ctx, &parent);

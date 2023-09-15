@@ -61,6 +61,8 @@ decode_privkey(TPM2_TSS2_DECODER_CTX *dctx, TPM2_PKEY *pkey,
 {
     TSS2_RC r = 0;
     const char *keytype;
+    ESYS_TR hmac_handle;
+    ESYS_TR policy_handle;
 
     if (!tpm2_keydata_read(bin, &pkey->data, KEY_FORMAT_DER))
         return NULL;
@@ -76,7 +78,7 @@ decode_privkey(TPM2_TSS2_DECODER_CTX *dctx, TPM2_PKEY *pkey,
         } else {
             DBG("TSS2 DECODER LOAD parent: primary 0x%x\n", TPM2_RH_OWNER);
             if (!tpm2_build_primary(pkey->core, pkey->esys_ctx, pkey->capability.algorithms,
-                                    ESYS_TR_RH_OWNER, &dctx->parentAuth, &parent))
+                                    ESYS_TR_RH_OWNER, &dctx->parentAuth, &parent, &hmac_handle))
                 goto error1;
         }
 

@@ -206,6 +206,8 @@ tpm2_ec_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     TPM2B_PRIVATE *keyPrivate = NULL;
     TPM2_PKEY *pkey = NULL;
     TSS2_RC r = TSS2_RC_SUCCESS;
+    ESYS_TR hmac_handle;
+    ESYS_TR policy_handle;
 
     DBG("EC GEN%s\n",
         gen->inSensitive.sensitive.userAuth.size > 0 ? " with user-auth" : "");
@@ -232,7 +234,7 @@ tpm2_ec_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     } else {
         DBG("EC GEN parent: primary 0x%x\n", TPM2_RH_OWNER);
         if (!tpm2_build_primary(pkey->core, pkey->esys_ctx, pkey->capability.algorithms,
-                                ESYS_TR_RH_OWNER, &gen->parentAuth, &parent))
+                                ESYS_TR_RH_OWNER, &gen->parentAuth, &parent, &hmac_handle))
             goto error;
     }
 
