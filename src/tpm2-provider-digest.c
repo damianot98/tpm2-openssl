@@ -13,6 +13,12 @@ void
 tpm2_hash_sequence_init(TPM2_HASH_SEQUENCE *seq,
                         TPM2_PROVIDER_CTX *cprov, TPM2_ALG_ID algin)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_digest.c tpm2_hash_sequence_init\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     seq->core = cprov->core;
     seq->esys_ctx = cprov->esys_ctx;
     seq->algorithm = algin;
@@ -22,6 +28,12 @@ tpm2_hash_sequence_init(TPM2_HASH_SEQUENCE *seq,
 void
 tpm2_hash_sequence_flush(TPM2_HASH_SEQUENCE *seq)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_digest.c tpm2_hash_sequence_flush\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (seq->handle != ESYS_TR_NONE)
         Esys_FlushContext(seq->esys_ctx, seq->handle);
 }
@@ -31,6 +43,12 @@ tpm2_hash_sequence_dup(TPM2_HASH_SEQUENCE *seq, const TPM2_HASH_SEQUENCE *src)
 {
     TPMS_CONTEXT *context = NULL;
     TSS2_RC r;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_digest.c tpm2_hash_sequence_dup\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     seq->core = src->core;
     seq->esys_ctx = src->esys_ctx;
@@ -62,6 +80,12 @@ tpm2_hash_sequence_start(TPM2_HASH_SEQUENCE *seq)
     TPM2B_AUTH null_auth = { .size = 0 };
     TSS2_RC r;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_digest.c tpm2_hash_sequence_start\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     seq->buffer.size = 0;
 
     r = Esys_HashSequenceStart(seq->esys_ctx, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE,
@@ -76,6 +100,12 @@ tpm2_hash_sequence_update(TPM2_HASH_SEQUENCE *seq,
                           const unsigned char *data, size_t datalen)
 {
     TSS2_RC r;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_digest.c tpm2_hash_sequence_update\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (data == NULL)
         return 1;
@@ -109,6 +139,12 @@ tpm2_hash_sequence_complete(TPM2_HASH_SEQUENCE *seq,
 {
     TSS2_RC r;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_digest.c tpm2_hash_sequence_complete\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (seq->buffer.size > 0) {
         r = Esys_SequenceUpdate(seq->esys_ctx, seq->handle,
                                 ESYS_TR_PASSWORD, ESYS_TR_NONE, ESYS_TR_NONE, &seq->buffer);
@@ -132,6 +168,12 @@ tpm2_hash_sequence_hash(TPM2_HASH_SEQUENCE *seq,
                         TPM2B_DIGEST **digest, TPMT_TK_HASHCHECK **validation)
 {
     TSS2_RC r;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_digest.c tpm2_hash_sequence_hash\n\n");
+
+    /////////////////////////////////////////////////////////////////////////////////////// 
 
     if (datalen <= TPM2_MAX_DIGEST_BUFFER) {
         seq->buffer.size = datalen;

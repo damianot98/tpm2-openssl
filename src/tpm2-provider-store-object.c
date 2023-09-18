@@ -36,6 +36,12 @@ tpm2_object_open(void *provctx, const char *uri)
     TPM2_OBJECT_CTX *ctx;
     char *baseuri, *opts;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_store_object.c tpm2_object_open\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     DBG("STORE/OBJECT OPEN %s\n", uri);
     if ((ctx = OPENSSL_zalloc(sizeof(TPM2_OBJECT_CTX))) == NULL)
         return NULL;
@@ -87,6 +93,12 @@ tpm2_object_attach(void *provctx, OSSL_CORE_BIO *cin)
     TPM2_PROVIDER_CTX *cprov = provctx;
     TPM2_OBJECT_CTX *ctx;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_store_object.c tpm2_object_attach\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     DBG("STORE/OBJECT ATTACH\n");
     if ((ctx = OPENSSL_zalloc(sizeof(TPM2_OBJECT_CTX))) == NULL)
         return NULL;
@@ -107,6 +119,12 @@ error:
 static const OSSL_PARAM *
 tpm2_object_settable_params(void *provctx)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_store_object.c tpm2_object_settable_params\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     static const OSSL_PARAM known_settable_ctx_params[] = {
         OSSL_PARAM_END
     };
@@ -116,6 +134,12 @@ tpm2_object_settable_params(void *provctx)
 static int
 tpm2_object_set_params(void *loaderctx, const OSSL_PARAM params[])
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_store_object.c tpm2_object_set_params\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     TRACE_PARAMS("STORE/OBJECT SET_PARAMS", params);
     return 1;
 }
@@ -125,6 +149,12 @@ read_until_eof(BIO *bio, uint8_t **buffer)
 {
     int size = 1024;
     int len = 0;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_store_object.c read_until_eof\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if ((*buffer = OPENSSL_malloc(size)) == NULL)
         return -1;
@@ -162,6 +192,12 @@ tpm2_object_load_pkey(TPM2_OBJECT_CTX *sctx, ESYS_TR object,
     TPM2_PKEY *pkey = NULL;
     TSS2_RC r;
     int ret = 0;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_store_object.c tpm2_object_load_pkey\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     DBG("STORE/OBJECT LOAD pkey\n");
     pkey = OPENSSL_zalloc(sizeof(TPM2_PKEY));
@@ -220,6 +256,12 @@ tpm2_object_load_index(TPM2_OBJECT_CTX *sctx, ESYS_TR object,
     BIO *bufio;
     TSS2_RC r;
     int ret = 0;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_store_object.c tpm2_oject_load_index\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     r = Esys_NV_ReadPublic(sctx->esys_ctx, object,
                            ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE,
@@ -308,6 +350,12 @@ tpm2_object_load(void *ctx,
     TSS2_RC r;
     int ret = 0;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_store_object.c tpm2_object_load\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     DBG("STORE/OBJECT LOAD\n");
     if (sctx->bio) {
         uint8_t *buffer;
@@ -367,6 +415,12 @@ error:
 static int
 tpm2_object_eof(void *ctx)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_store_object.c tpm2_object_eof\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     TPM2_OBJECT_CTX *sctx = ctx;
     return (sctx->bio && BIO_eof(sctx->bio)) || sctx->load_done;
 }
@@ -375,6 +429,12 @@ static int
 tpm2_object_close(void *ctx)
 {
     TPM2_OBJECT_CTX *sctx = ctx;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_store_object.c tpm2_object_close\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (sctx == NULL)
         return 0;

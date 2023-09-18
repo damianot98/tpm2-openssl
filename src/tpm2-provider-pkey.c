@@ -33,11 +33,23 @@ IMPLEMENT_PEM_read_bio(TSSPRIVKEY, TSSPRIVKEY, TSSPRIVKEY_PEM_STRING, TSSPRIVKEY
 
 TSSPRIVKEY *d2i_TSSPRIVKEY_bio(BIO *bp, TSSPRIVKEY **a)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-pkey.c d2i_TSSPRIVKEY_bio\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     return ASN1_d2i_bio_of(TSSPRIVKEY, TSSPRIVKEY_new, d2i_TSSPRIVKEY, bp, a);
 }
 
 int i2d_TSSPRIVKEY_bio(BIO *bp, const TSSPRIVKEY *a)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-pkey.c id2_TSSPRIVKEY_bio\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     return ASN1_i2d_bio_of(TSSPRIVKEY, i2d_TSSPRIVKEY, bp, a);
 }
 
@@ -53,6 +65,12 @@ int
 tpm2_keydata_write(const TPM2_KEYDATA *keydata, BIO *bout, TPM2_PKEY_FORMAT format)
 {
     TSSPRIVKEY *tpk = NULL;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-pkey.c tpm2_keydata_write\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     uint8_t privbuf[sizeof(keydata->priv)];
     uint8_t pubbuf[sizeof(keydata->pub)];
@@ -117,6 +135,12 @@ tpm2_keydata_read(BIO *bin, TPM2_KEYDATA *keydata, TPM2_PKEY_FORMAT format)
     uint64_t parent;
     TSSPRIVKEY *tpk = NULL;
     char type_oid[64];
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-pkey.c tpm2_keydata_read\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     switch (format) {
     case KEY_FORMAT_PEM:
@@ -262,6 +286,12 @@ tpm2_load_parent(const OSSL_CORE_HANDLE *core, ESYS_CONTEXT *esys_ctx,
 {
     TSS2_RC r;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-pkey.c tpm2_load_parent\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     /*
      * Set the parent auth if specified. Their is no way to get the pkey parent-auth
      * argument to this method, so we pull from the environment.
@@ -303,8 +333,16 @@ tpm2_build_primary(const OSSL_CORE_HANDLE *core, ESYS_CONTEXT *esys_ctx,
 {
     const TPM2B_PUBLIC *primaryTemplate = NULL;
     TSS2_RC r;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-pkey.c tpm2_build_primary\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
     
     ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    TPM2B_PUBLIC *out_public;
 
     r = tpm2_start_auth_session(3, esys_ctx, 1, session_handle);
     if (r != TPM2_RC_SUCCESS){
@@ -334,8 +372,12 @@ tpm2_build_primary(const OSSL_CORE_HANDLE *core, ESYS_CONTEXT *esys_ctx,
                            *session_handle, ESYS_TR_NONE, ESYS_TR_NONE,
                            &primarySensitive, primaryTemplate, &allOutsideInfo,
                            &allCreationPCR,
-                           object, NULL, NULL, NULL, NULL);
+                           object, &out_public, NULL, NULL, NULL);
 
+    TPM2B_NAME *primary_key_name = tpm2_get_key_name(esys_ctx, *object, *session_handle);
+
+    DBG("\nPrivate Key Name: %s\n\n", OPENSSL_buf2hexstr(primary_key_name->name, primary_key_name->size));
+    DBG("\nPrivate Key\n RSA BUFFER: %s\n", OPENSSL_buf2hexstr(out_public->publicArea.unique.rsa.buffer, out_public->publicArea.unique.rsa.size));
     
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -358,6 +400,12 @@ error:
 const char *
 tpm2_openssl_type(TPM2_KEYDATA *keydata)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-pkey.c tpm2_openssl_type\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (keydata->pub.publicArea.type == TPM2_ALG_RSA) {
         if (keydata->pub.publicArea.objectAttributes & TPMA_OBJECT_RESTRICTED) {
             /* when it's a restricted key */

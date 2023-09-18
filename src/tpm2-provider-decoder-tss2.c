@@ -37,6 +37,12 @@ tpm2_tss2_decoder_newctx(void *provctx)
     TPM2_PROVIDER_CTX *cprov = provctx;
     TPM2_TSS2_DECODER_CTX *dctx = OPENSSL_zalloc(sizeof(TPM2_TSS2_DECODER_CTX));
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-decoder-tss2.c tpm2_tss2_decoder_newctx\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (dctx == NULL)
         return NULL;
 
@@ -52,6 +58,12 @@ tpm2_tss2_decoder_freectx(void *ctx)
 {
     TPM2_TSS2_DECODER_CTX *dctx = ctx;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-decoder-tss2.c tpm2_tss2_decoder_freextx\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     OPENSSL_clear_free(dctx, sizeof(TPM2_TSS2_DECODER_CTX));
 }
 
@@ -63,6 +75,12 @@ decode_privkey(TPM2_TSS2_DECODER_CTX *dctx, TPM2_PKEY *pkey,
     const char *keytype;
     ESYS_TR hmac_handle;
     ESYS_TR policy_handle;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-decoder-tss2.c decode_privkey\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (!tpm2_keydata_read(bin, &pkey->data, KEY_FORMAT_DER))
         return NULL;
@@ -81,9 +99,60 @@ decode_privkey(TPM2_TSS2_DECODER_CTX *dctx, TPM2_PKEY *pkey,
                                     ESYS_TR_RH_OWNER, &dctx->parentAuth, &parent, &hmac_handle))
                 goto error1;
         }
+        
+        ///////////////////////////////////////////////////////////////////////////////////////
+        DBG("\nDECODER TSS2\nPUBLIC KEY: %s\n", OPENSSL_buf2hexstr(pkey->data.pub.publicArea.unique.rsa.buffer, pkey->data.pub.publicArea.unique.rsa.size));
+        ///////////////////////////////////////////////////////////////////////////////////////
+
+        // Start a new session of type POLICY this time
+        r = tpm2_start_auth_session(2, pkey->esys_ctx, 1, &policy_handle);    
+        if (r != TPM2_RC_SUCCESS){
+            DBG("Error during the creation of the Policy Session\n");
+            exit(-1);
+        }else{
+            DBG("Policy Session successfully created\n");
+        }
+
+        // Create the policy session depending on the value of the PCR-23
+        TPM2B_DIGEST policy_digest = {
+            .size = 0,
+            .buffer = {}
+        };
+
+        TPM2B_DIGEST old_digest = {
+            .size = 0,
+            .buffer = {}
+        };
+
+        r = tpm2_create_policy_digest(23, pkey->esys_ctx, policy_handle, &policy_digest);
+
+        DBG("\nPOLICY DIGEST 2: %s\n", OPENSSL_buf2hexstr(pkey->data.pub.publicArea.authPolicy.buffer, pkey->data.pub.publicArea.authPolicy.size));
+
+        if (r != TPM2_RC_SUCCESS){
+            DBG("Error when creating the Policy Digest\n");
+            exit(-1);
+        }else{
+            DBG("Policy Digest creation successful\n");
+        }
+
+        DBG("SIZE OLD: %d\n", pkey->data.pub.publicArea.authPolicy.size);
+        DBG("SIZE NEW: %d\n", policy_digest.size);
+
+        old_digest.size = pkey->data.pub.publicArea.authPolicy.size;
+        memcpy(old_digest.buffer, pkey->data.pub.publicArea.authPolicy.buffer, old_digest.size);
+
+        Esys_FlushContext(pkey->esys_ctx, policy_handle);
+
+        // if (memcmp(old_digest.buffer, policy_digest.buffer, policy_digest.size)){
+        //     DBG("Authentication Error. Couldn't start the server because the PCRs values don't match.\n");
+        //     goto error1;
+        // }else{
+        //     DBG("Successful Authentication. PCRs values still in the same state.\n");
+        // }
+
 
         r = Esys_Load(pkey->esys_ctx, parent,
-                      ESYS_TR_PASSWORD, ESYS_TR_NONE, ESYS_TR_NONE,
+                      hmac_handle, ESYS_TR_NONE, ESYS_TR_NONE,
                       &pkey->data.priv, &pkey->data.pub, &pkey->object);
 
         if (pkey->data.parent && pkey->data.parent != TPM2_RH_OWNER)
@@ -147,6 +216,12 @@ tpm2_tss2_decoder_decode(void *ctx, OSSL_CORE_BIO *cin, int selection,
     int fpos, object_type;
     int res = 0;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-decoder-tss2.c tpm2_tss2_decoder_decode\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     DBG("TSS2 DECODER DECODE 0x%x\n", selection);
     if ((pkey = OPENSSL_zalloc(sizeof(TPM2_PKEY))) == NULL)
         return 0;
@@ -203,6 +278,12 @@ tpm2_tss2_decoder_decode_rsa(void *ctx, OSSL_CORE_BIO *cin, int selection,
                              OSSL_CALLBACK *object_cb, void *object_cbarg,
                              OSSL_PASSPHRASE_CALLBACK *pw_cb, void *pw_cbarg)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-decoder-tss2.c tpm2_tss2_decoder_decode_rsa\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     return tpm2_tss2_decoder_decode(ctx, cin, selection, TPM2_ALG_RSA,
                                     object_cb, object_cbarg, pw_cb, pw_cbarg);
 }
@@ -212,6 +293,12 @@ tpm2_tss2_decoder_decode_ec(void *ctx, OSSL_CORE_BIO *cin, int selection,
                             OSSL_CALLBACK *object_cb, void *object_cbarg,
                             OSSL_PASSPHRASE_CALLBACK *pw_cb, void *pw_cbarg)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-decoder-tss2.c tpm2_tss2_decoder_decode_ec\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     return tpm2_tss2_decoder_decode(ctx, cin, selection, TPM2_ALG_ECC,
                                     object_cb, object_cbarg, pw_cb, pw_cbarg);
 }
@@ -221,6 +308,12 @@ tpm2_tss2_decoder_export_object(void *ctx, const void *objref, size_t objref_sz,
                                 OSSL_CALLBACK *export_cb, void *export_cbarg)
 {
     TPM2_PKEY *keydata;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-decoder-tss2.c tpm2_tss2_decoder_export_object\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     DBG("TSS2 DECODER EXPORT_OBJECT\n");
     if (objref_sz == sizeof(keydata)) {

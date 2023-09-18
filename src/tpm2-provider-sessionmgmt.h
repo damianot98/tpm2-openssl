@@ -21,5 +21,7 @@ TSS2_RC tpm2_create_policy_digest(unsigned int pcr_number,
                                 ESYS_TR session_handle,
                                 TPM2B_DIGEST *policy_digest);
 
+TPM2B_NAME* tpm2_get_key_name(ESYS_CONTEXT *esys_context, ESYS_TR handle, ESYS_TR session_handle);
+
 
 #endif /* TPM2_PROVIDER_SESSIONMGMT_H */

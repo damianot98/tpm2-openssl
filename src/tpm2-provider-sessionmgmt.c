@@ -110,10 +110,19 @@ TSS2_RC tpm2_create_policy_digest(unsigned int pcr_number,
     policy_digest->size = policyDigest->size;
     memcpy(policy_digest->buffer, policyDigest->buffer, policyDigest->size);
 
-    DBG("PolicyDigest after PolicyPCR: %s\n", OPENSSL_buf2hexstr(policyDigest->buffer, policyDigest->size));
-
-    DBG("Size_0: %d\n", policyDigest->size);
+    DBG("\nPOLICY DIGEST 1: %s\n", OPENSSL_buf2hexstr(policyDigest->buffer, policyDigest->size));
 
     return rc;
 }
 
+TPM2B_NAME* tpm2_get_key_name(ESYS_CONTEXT *esys_context, ESYS_TR handle, ESYS_TR session_handle){
+
+    TPM2_RC rc;
+    TPM2B_NAME *name;
+
+    rc = Esys_ReadPublic(esys_context, handle, session_handle, ESYS_TR_NONE, ESYS_TR_NONE, NULL, &name, NULL);
+    if (rc != TPM2_RC_SUCCESS){
+        fprintf(stderr, "Couldn´t retrieve the name of the key\n");
+    }
+    return name;
+}

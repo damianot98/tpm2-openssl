@@ -29,6 +29,12 @@ tpm2_encoder_newctx(void *provctx)
     TPM2_PROVIDER_CTX *cprov = provctx;
     TPM2_ENCODER_CTX *ectx = OPENSSL_zalloc(sizeof(TPM2_ENCODER_CTX));
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_encoder_newctx\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (ectx == NULL)
         return NULL;
 
@@ -41,6 +47,12 @@ static void
 tpm2_encoder_freectx(void *ctx)
 {
     TPM2_ENCODER_CTX *ectx = ctx;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_encoder_freectx\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (ectx == NULL)
         return;
@@ -116,6 +128,12 @@ typedef int (*tpm2_tss_encode_fun)(TPM2_ENCODER_CTX *, BIO *, TPM2_PKEY *);
 static int
 tpm2_tss_encode_private_PrivateKeyInfo_der(TPM2_ENCODER_CTX *ectx, BIO *bout, TPM2_PKEY *pkey)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_tss_encode_private_PrivateKeyInfo_der\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     return tpm2_keydata_write(&pkey->data, bout, KEY_FORMAT_DER);
 }
 
@@ -128,6 +146,12 @@ DECLARE_ENCODER(tss, PrivateKeyInfo, der)
 static int
 tpm2_tss_encode_private_PrivateKeyInfo_pem(TPM2_ENCODER_CTX *ectx, BIO *bout, TPM2_PKEY *pkey)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_tss_encode_private_PrivateKeyInfo_pem\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     return tpm2_keydata_write(&pkey->data, bout, KEY_FORMAT_PEM);
 }
 
@@ -160,8 +184,16 @@ tpm2_get_rsa_pubkey(const TPM2_PKEY *pkey)
     BIGNUM *nbig;
     UINT32 exponent;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_get_rsa_pubkey\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if ((tpk = TPM2_RSA_PUBKEY_new()) == NULL)
         goto error1;
+
+    DBG("\nTPM2_GET_RSA_PUBKEY\nRSA_BUFFER: %s\n", OPENSSL_buf2hexstr(pkey->data.pub.publicArea.unique.rsa.buffer, pkey->data.pub.publicArea.unique.rsa.size));
 
     /* set n */
     if ((nbig = BN_bin2bn(pkey->data.pub.publicArea.unique.rsa.buffer,
@@ -193,6 +225,12 @@ tpm2_get_rsa_pubkey_der(const TPM2_PKEY *pkey, unsigned char **penc)
     TPM2_RSA_PUBKEY *tpk;
     int penclen;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_get_rsa_pubkey_der\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if ((tpk = tpm2_get_rsa_pubkey(pkey)) == NULL)
         return -1;
     /* export as DER */
@@ -207,6 +245,12 @@ tpm2_rsa_encode_public_pkcs1_der(TPM2_ENCODER_CTX *ectx, BIO *bout, TPM2_PKEY *p
 {
     TPM2_RSA_PUBKEY *tpk;
     int ret;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_rsa_encode_public_pkcs1_der\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if ((tpk = tpm2_get_rsa_pubkey(pkey)) == NULL)
         return 0;
@@ -228,6 +272,12 @@ tpm2_rsa_encode_public_pkcs1_pem(TPM2_ENCODER_CTX *ectx, BIO *bout, TPM2_PKEY *p
 {
     TPM2_RSA_PUBKEY *tpk;
     int ret;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_rsa_encode_public_pkcs1_pem\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if ((tpk = tpm2_get_rsa_pubkey(pkey)) == NULL)
         return 0;
@@ -286,6 +336,12 @@ tpm2_get_x509_rsa_pubkey(const TPM2_PKEY *pkey)
     int penclen;
     X509_PUBKEY *pubkey;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_get_x509_rsa_pubkey\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if ((penclen = tpm2_get_rsa_pubkey_der(pkey, &penc)) < 0)
         return NULL;
 
@@ -316,6 +372,12 @@ tpm2_get_x509_rsapss_pubkey(const TPM2_PKEY *pkey)
     ASN1_STRING *params;
     unsigned char *penc = NULL;
     int penclen;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_get_x509_rsapss_pubkey\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if ((pubkey = X509_PUBKEY_new()) == NULL)
         return NULL;
@@ -355,6 +417,12 @@ tpm2_get_x509_ec_pubkey(const TPM2_PKEY *pkey)
     unsigned char *penc;
     int penclen;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_get_x509_ec_pubkey\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if ((pubkey = X509_PUBKEY_new()) == NULL)
         return NULL;
 
@@ -382,6 +450,12 @@ error1:
 static EC_GROUP *
 get_ec_group(TPM2_PKEY *pkey)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c get_ec_group\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     return EC_GROUP_new_by_curve_name(
                 tpm2_ecc_curve_to_nid(TPM2_PKEY_EC_CURVE(pkey)));
 }
@@ -391,6 +465,12 @@ tpm2_ec_encode_parameters_SubjectPublicKeyInfo_der(TPM2_ENCODER_CTX *ectx, BIO *
 {
     EC_GROUP *group;
     int res;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_ec_encode_parameters_SubjectPublicKeyInfo_der\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if ((group = get_ec_group(pkey)) == NULL)
         return 0;
@@ -410,6 +490,12 @@ tpm2_ec_encode_parameters_SubjectPublicKeyInfo_pem(TPM2_ENCODER_CTX *ectx, BIO *
 {
     EC_GROUP *group;
     int res;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_ec_encode_parameters_SubjectPublicKeyInfo_pem\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if ((group = get_ec_group(pkey)) == NULL)
         return 0;
@@ -436,6 +522,12 @@ static int print_labeled_buf(BIO *out, const char *label,
                              const unsigned char *buf, size_t buflen)
 {
     size_t i, pos;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c print_labeled_buf\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (BIO_printf(out, "%s\n", label) <= 0)
         return 0;
@@ -469,6 +561,12 @@ static int print_labeled_buf(BIO *out, const char *label,
 static int
 print_object_attributes(BIO *bout, TPMA_OBJECT objectAttributes)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c print_objext_attributes\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     struct { TPMA_OBJECT in; char *name; } tab[] = {
         { TPMA_OBJECT_FIXEDTPM, "fixedTPM" },
         { TPMA_OBJECT_STCLEAR, "stClear" },
@@ -501,6 +599,12 @@ tpm2_rsa_encoder_encode_text(void *ctx, OSSL_CORE_BIO *cout, const void *key,
     TPM2_PKEY *pkey = (TPM2_PKEY *)key;
     BIO *bout;
     UINT32 exponent;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_rsa_encoder_encode_text\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     DBG("ENCODER ENCODE rsa text\n");
 
@@ -550,6 +654,12 @@ tpm2_ec_encoder_encode_text(void *ctx, OSSL_CORE_BIO *cout, const void *key,
     int curve_nid;
     size_t size;
     void *buffer;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_encoder.c tpm2_ec_encoder_encode_text\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     DBG("ENCODER ENCODE ec text\n");
 

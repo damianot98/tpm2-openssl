@@ -17,6 +17,12 @@ static OSSL_FUNC_core_vset_error_fn *c_vset_error = NULL;
 int
 init_core_func_from_dispatch(const OSSL_DISPATCH *fns)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-core.c init_core_funct_from_dispatch\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     for (; fns->function_id != 0; fns++) {
         switch (fns->function_id) {
         case OSSL_FUNC_CORE_GETTABLE_PARAMS:
@@ -49,6 +55,12 @@ init_core_func_from_dispatch(const OSSL_DISPATCH *fns)
 int
 tpm2_core_get_params(const OSSL_CORE_HANDLE *prov, OSSL_PARAM params[])
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-core.c tpm2_core_get_params\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (c_get_params == NULL)
         return 1;
     return c_get_params(prov, params);
@@ -58,6 +70,12 @@ void
 tpm2_new_error(const OSSL_CORE_HANDLE *handle,
                uint32_t reason, const char *fmt, ...)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-core.c tpm2_new_error\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (c_new_error != NULL && c_vset_error != NULL) {
         va_list args;
 
@@ -73,6 +91,12 @@ tpm2_new_error_rc(const OSSL_CORE_HANDLE *handle,
                   uint32_t reason, TSS2_RC rc)
 {
 #ifdef WITH_TSS2_RC
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-core.c tpm2_new_error_rc\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
     tpm2_new_error(handle, reason, "%i %s", rc, Tss2_RC_Decode(rc));
 #else
     tpm2_new_error(handle, reason, "%i", rc);
@@ -83,6 +107,12 @@ void
 tpm2_set_error_debug(const OSSL_CORE_HANDLE *handle,
                      const char *file, int line, const char *func)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-core.c tpm2_set_error_debug\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (c_set_error_debug != NULL)
         c_set_error_debug(handle, file, line, func);
 }
@@ -90,6 +120,12 @@ tpm2_set_error_debug(const OSSL_CORE_HANDLE *handle,
 void
 tpm2_list_params(const char *text, const OSSL_PARAM params[])
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-core.c tpm2_list_params\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     fprintf(stderr, "%s [", text);
 
     while (params->key != NULL) {
@@ -105,6 +141,12 @@ tpm2_supports_algorithm(const TPMS_CAPABILITY_DATA *caps, TPM2_ALG_ID algorithm)
 {
     UINT32 index;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-core.c tpm2_supports_algorithm\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     for (index = 0; index < caps->data.algorithms.count; index++) {
         if (caps->data.algorithms.algProperties[index].alg == algorithm)
             return 1;
@@ -117,6 +159,12 @@ int
 tpm2_supports_command(const TPMS_CAPABILITY_DATA *caps, TPM2_CC command)
 {
     UINT32 index;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-core.c tpm2_supports_command\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     for (index = 0; index < caps->data.command.count; index++) {
         if ((caps->data.command.commandAttributes[index] & TPMA_CC_COMMANDINDEX_MASK) == command)
@@ -131,6 +179,12 @@ tpm2_max_nvindex_buffer(const TPMS_CAPABILITY_DATA *caps)
 {
     UINT32 index;
     uint16_t max_nv_size = TPM2_MAX_NV_BUFFER_SIZE;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-core.c tpm2_max_nvindex_buffer\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     for (index = 0; index < caps->data.tpmProperties.count; index++) {
         if (caps->data.tpmProperties.tpmProperty[index].property == TPM2_PT_NV_BUFFER_MAX)

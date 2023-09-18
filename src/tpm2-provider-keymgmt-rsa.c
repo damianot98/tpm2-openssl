@@ -75,6 +75,12 @@ tpm2_rsa_keymgmt_new(void *provctx)
     TPM2_PROVIDER_CTX *cprov = provctx;
     TPM2_PKEY *pkey;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_new\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     DBG("RSA NEW\n");
     if ((pkey = OPENSSL_zalloc(sizeof(TPM2_PKEY))) == NULL) {
         TPM2_ERROR_raise(cprov->core, TPM2_ERR_MEMORY_FAILURE);
@@ -99,6 +105,12 @@ tpm2_create_rsagen_ctx(void *provctx)
     TPM2_PROVIDER_CTX *cprov = provctx;
     TPM2_RSAGEN_CTX *gen;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_create_rsagen_ctx\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if ((gen = OPENSSL_zalloc(sizeof(TPM2_RSAGEN_CTX))) == NULL)
         return NULL;
 
@@ -112,6 +124,12 @@ static void *
 tpm2_rsa_keymgmt_gen_init(void *provctx, int selection, const OSSL_PARAM params[])
 {
     TPM2_RSAGEN_CTX *gen;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_gen_init\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     DBG("RSA GEN INIT rsa %x\n", selection);
     if ((gen = tpm2_create_rsagen_ctx(provctx)) == NULL)
@@ -138,6 +156,12 @@ static void *
 tpm2_rsapss_keymgmt_gen_init(void *provctx, int selection, const OSSL_PARAM params[])
 {
     TPM2_RSAGEN_CTX *gen;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsapss_keymgmt_gen_init\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     DBG("RSA GEN INIT rsapss %x\n", selection);
     if ((gen = tpm2_create_rsagen_ctx(provctx)) == NULL)
@@ -170,6 +194,12 @@ tpm2_rsa_keymgmt_gen_set_params(void *ctx, const OSSL_PARAM params[])
     const OSSL_PARAM *p;
     size_t bits, primes;
     BIGNUM *e = NULL;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_gen_set_params\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (params == NULL)
         return 1;
@@ -223,6 +253,12 @@ tpm2_rsa_keymgmt_gen_set_params(void *ctx, const OSSL_PARAM params[])
 static const OSSL_PARAM *
 tpm2_rsa_keymgmt_gen_settable_params(void *ctx, void *provctx)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_gen_settable_params\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     static OSSL_PARAM settable[] = {
         OSSL_PARAM_uint32(TPM2_PKEY_PARAM_PARENT, NULL),
         OSSL_PARAM_utf8_string(TPM2_PKEY_PARAM_PARENT_AUTH, NULL, 0),
@@ -250,6 +286,11 @@ tpm2_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     ESYS_TR hmac_handle;
     ESYS_TR policy_handle;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_gen\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
 
     DBG("RSA GEN%s %i bits\n",
@@ -315,22 +356,27 @@ tpm2_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
         DBG("Policy Digest creation successful\n");
     }
 
-    DBG("Size_1: %d\n", policy_digest.size);
-
     // Change the inSensitive field, in order to set the value of the authentication policy equal to the policy digest
 
     gen->inPublic.publicArea.authPolicy.size = policy_digest.size;
     memcpy(gen->inPublic.publicArea.authPolicy.buffer, policy_digest.buffer, policy_digest.size);
 
+    TPM2B_CREATION_DATA *creation_data;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
     /* older TPM2 chips do not support Esys_CreateLoaded */
     r = Esys_Create(gen->esys_ctx, parent,
-                    hmac_handle, ESYS_TR_NONE, ESYS_TR_NONE,
+                    hmac_handle, policy_handle, ESYS_TR_NONE,
                     &gen->inSensitive, &gen->inPublic, &outside_info, &creation_pcr,
-                    &keyPrivate, &keyPublic, NULL, NULL, NULL);
+                    &keyPrivate, &keyPublic, &creation_data, NULL, NULL);
+
+    DBG("\nParent name: %s\n", OPENSSL_buf2hexstr(creation_data->creationData.parentName.name, creation_data->creationData.parentName.size));
+    DBG("\nChild Key\nRSA PUBLIC BUFFER: %s\n", OPENSSL_buf2hexstr(keyPublic->publicArea.unique.rsa.buffer, keyPublic->publicArea.unique.rsa.size));
+    DBG("RSA PRIVATE BUFFER: %s\n", OPENSSL_buf2hexstr(keyPrivate->buffer, keyPrivate->size));
+
+
     TPM2_CHECK_RC(gen->core, r, TPM2_ERR_CANNOT_CREATE_KEY, goto error);
 
     pkey->data.pub = *keyPublic;
@@ -369,6 +415,12 @@ tpm2_rsa_keymgmt_gen_cleanup(void *ctx)
 {
     TPM2_RSAGEN_CTX *gen = ctx;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_gen_cleanup\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     DBG("RSA CLEANUP\n");
     if (gen == NULL)
         return;
@@ -380,6 +432,12 @@ static void *
 tpm2_rsa_keymgmt_load(const void *reference, size_t reference_sz)
 {
     TPM2_PKEY *pkey = NULL;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_load\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     DBG("RSA LOAD\n");
     if (!reference || reference_sz != sizeof(pkey))
@@ -397,6 +455,12 @@ static void
 tpm2_rsa_keymgmt_free(void *keydata)
 {
     TPM2_PKEY *pkey = keydata;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_free\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     DBG("RSA FREE\n");
     if (pkey == NULL)
@@ -417,6 +481,12 @@ tpm2_rsa_keymgmt_get_params(void *keydata, OSSL_PARAM params[])
 {
     TPM2_PKEY *pkey = (TPM2_PKEY *)keydata;
     OSSL_PARAM *p;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_get_params\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (params == NULL)
         return 1;
@@ -475,6 +545,12 @@ tpm2_rsa_keymgmt_get_params(void *keydata, OSSL_PARAM params[])
 static const OSSL_PARAM *
 tpm2_rsa_keymgmt_gettable_params(void *provctx)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_gettable_params\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     static OSSL_PARAM gettable[] = {
         OSSL_PARAM_int(OSSL_PKEY_PARAM_BITS, NULL),
         OSSL_PARAM_int(OSSL_PKEY_PARAM_SECURITY_BITS, NULL),
@@ -492,6 +568,12 @@ tpm2_rsa_keymgmt_gettable_params(void *provctx)
 static const char *
 tpm2_rsa_keymgmt_query_operation_name(int operation_id)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_query_operation_name\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     /* For any RSA key, we use the "RSA" algorithms regardless of sub-type. */
     return "RSA";
 }
@@ -504,6 +586,12 @@ tpm2_rsa_keymgmt_has(const void *keydata, int selection)
 {
     TPM2_PKEY *pkey = (TPM2_PKEY *)keydata;
     int ok = 1;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_has\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     DBG("RSA HAS %x\n", selection);
 
@@ -526,6 +614,12 @@ pkey_get_rsa_exp(const TPM2_PKEY *pkey)
 {
     UINT32 exponent;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c pkey_get_rsa_exp\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     exponent = pkey->data.pub.publicArea.parameters.rsaDetail.exponent;
     if (!exponent)
         exponent = 0x10001;
@@ -539,6 +633,12 @@ tpm2_rsa_keymgmt_match(const void *keydata1, const void *keydata2,
 {
     TPM2_PKEY *pkey1 = (TPM2_PKEY *)keydata1;
     TPM2_PKEY *pkey2 = (TPM2_PKEY *)keydata2;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_match\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     DBG("RSA MATCH 0x%x\n", selection);
     if ((selection & OSSL_KEYMGMT_SELECT_KEYPAIR) != 0) {
@@ -565,6 +665,12 @@ tpm2_rsa_keymgmt_import(void *keydata,
 {
     TPM2_PKEY *pkey = (TPM2_PKEY *)keydata;
     const OSSL_PARAM *p;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_import\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (pkey == NULL)
         return 0;
@@ -605,6 +711,12 @@ tpm2_rsa_keymgmt_export(void *keydata, int selection,
     TPM2_PKEY *pkey = (TPM2_PKEY *)keydata;
     UINT32 exponent;
     int ok = 1;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_export\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     DBG("RSA EXPORT %x\n", selection);
     if (pkey == NULL)
@@ -647,6 +759,12 @@ tpm2_rsa_keymgmt_export(void *keydata, int selection,
 static const OSSL_PARAM *
 tpm2_rsa_keymgmt_eximport_types(int selection)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_eximport_types\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     static const OSSL_PARAM rsa_public_key_types[] = {
         OSSL_PARAM_BN(OSSL_PKEY_PARAM_RSA_N, NULL, 0),
         OSSL_PARAM_BN(OSSL_PKEY_PARAM_RSA_E, NULL, 0),
@@ -686,6 +804,12 @@ DECLARE_KEYMGMT_FUNCTIONS(rsapss)
 
 const OSSL_DISPATCH *tpm2_rsa_keymgmt_dispatch(const TPM2_CAPABILITY *capability)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsa_keymgmt_dispatch\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (tpm2_supports_algorithm(capability->algorithms, TPM2_ALG_RSA))
         return tpm2_rsa_keymgmt_functions;
     else
@@ -694,6 +818,12 @@ const OSSL_DISPATCH *tpm2_rsa_keymgmt_dispatch(const TPM2_CAPABILITY *capability
 
 const OSSL_DISPATCH *tpm2_rsapss_keymgmt_dispatch(const TPM2_CAPABILITY *capability)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-keymgmt-rsa.c tpm2_rsapss_keymgmt_dispatch\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (tpm2_supports_algorithm(capability->algorithms, TPM2_ALG_RSA)
             && tpm2_supports_algorithm(capability->algorithms, TPM2_ALG_RSAPSS))
         return tpm2_rsapss_keymgmt_functions;

@@ -52,6 +52,12 @@ tpm2_signature_newctx(void *provctx, const char *propq)
     TPM2_PROVIDER_CTX *cprov = provctx;
     TPM2_SIGNATURE_CTX *sctx = OPENSSL_zalloc(sizeof(TPM2_SIGNATURE_CTX));
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_signature_newctx\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (sctx == NULL)
         return NULL;
 
@@ -67,6 +73,12 @@ tpm2_signature_freectx(void *ctx)
 {
     TPM2_SIGNATURE_CTX *sctx = ctx;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_signature_freextx\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (sctx == NULL)
         return;
 
@@ -80,6 +92,12 @@ tpm2_signature_dupctx(void *ctx)
 {
     TPM2_SIGNATURE_CTX *src = ctx;
     TPM2_SIGNATURE_CTX *sctx = OPENSSL_zalloc(sizeof(TPM2_SIGNATURE_CTX));
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_signature_dupctx\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (sctx == NULL)
         return NULL;
@@ -106,6 +124,14 @@ ensure_key_loaded(TPM2_PKEY *pkey)
 {
     TSS2_RC r;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c ensure_key_loaded\n\n");
+
+    DBG("\n<<<<<<<<<<<<<<<<<< PUBLIC KEY LOADED: %s>>>>>>>>>>>>>>>>>>", OPENSSL_buf2hexstr(pkey->data.pub.publicArea.unique.rsa.buffer, pkey->data.pub.publicArea.unique.rsa.size));
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     /* it is acceptable to initialize without any key */
     if (!pkey)
         return 1;
@@ -126,6 +152,12 @@ ensure_key_loaded(TPM2_PKEY *pkey)
 static int
 rsa_signature_scheme_init(TPM2_SIGNATURE_CTX *sctx, const char *mdname)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c rsa_signature_scheme_init\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     /* determine hash algorithm */
     if (mdname == NULL) {
         if (sctx->signScheme.details.any.hashAlg != TPM2_ALG_NULL)
@@ -159,6 +191,12 @@ rsa_signature_scheme_init(TPM2_SIGNATURE_CTX *sctx, const char *mdname)
 static int
 ecdsa_signature_scheme_init(TPM2_SIGNATURE_CTX *sctx, const char *mdname)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c ecdsa_signature_scheme_init\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     /* determine hash algorithm */
     if (mdname == NULL) {
         if (sctx->signScheme.details.any.hashAlg != TPM2_ALG_NULL)
@@ -188,6 +226,12 @@ tpm2_rsa_signature_sign_init(void *ctx, void *provkey, const OSSL_PARAM params[]
 {
     TPM2_SIGNATURE_CTX *sctx = ctx;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_rsa_signature_sign_init\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     DBG("SIGN SIGN_INIT rsa\n");
     sctx->pkey = provkey;
 
@@ -200,6 +244,12 @@ tpm2_ecdsa_signature_sign_init(void *ctx, void *provkey, const OSSL_PARAM params
 {
     TPM2_SIGNATURE_CTX *sctx = ctx;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_ecdsa_signature_sign_init\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     DBG("SIGN SIGN_INIT ecdsa\n");
     sctx->pkey = provkey;
 
@@ -210,6 +260,12 @@ tpm2_ecdsa_signature_sign_init(void *ctx, void *provkey, const OSSL_PARAM params
 static int
 estimate_signature_size(const TPMT_PUBLIC *public)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c estimate_signature_size\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (public->type == TPM2_ALG_RSA) {
         return (public->parameters.rsaDetail.keyBits + 7) / 8;
     } else if (public->type == TPM2_ALG_ECC) {
@@ -224,6 +280,12 @@ encode_ecdsa_sig(const TPMS_SIGNATURE_ECC *sig, unsigned char **str)
 {
     ECDSA_SIG *data = NULL;
     int res = 0;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c encode_ecdsa_sig\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if ((data = ECDSA_SIG_new()) != NULL &&
             ECDSA_SIG_set0(data, BN_bin2bn(sig->signatureR.buffer,
@@ -242,6 +304,12 @@ decode_ecdsa_sig(TPMS_SIGNATURE_ECC *sig, const unsigned char *buf, size_t bufle
     const BIGNUM *r, *s;
     int tolen, res = 0;
     ECDSA_SIG *data = d2i_ECDSA_SIG(NULL, &buf, buflen);
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c decode_ecdsa_sig\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (data == NULL)
         return 0;
@@ -265,6 +333,13 @@ static int
 get_signature_buffer(const TPMT_SIGNATURE *signature,
                      unsigned char *sig, size_t *siglen, size_t sigsize)
 {
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c get_signature_buffer\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (signature->sigAlg == TPM2_ALG_RSASSA ||
             signature->sigAlg == TPM2_ALG_RSAPSS) {
         /* copy buffer */
@@ -300,6 +375,12 @@ set_signature_buffer(TPMT_SIGNATURE *signature,
                      const TPMT_PUBLIC *public, TPMT_SIG_SCHEME *signScheme,
                      const unsigned char *sig, size_t siglen)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c set_signature_buffer\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     signature->sigAlg = signScheme->scheme;
 
     if (signature->sigAlg == TPM2_ALG_RSASSA ||
@@ -325,6 +406,12 @@ tpm2_signature_sign(void *ctx, unsigned char *sig, size_t *siglen, size_t sigsiz
     TPM2_SIGNATURE_CTX *sctx = ctx;
     TPM2B_DIGEST digest;
     TSS2_RC r;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_signature_sign\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     TPMT_TK_HASHCHECK empty_validation = {
         .tag = TPM2_ST_HASHCHECK,
@@ -368,6 +455,12 @@ tpm2_rsa_signature_digest_init(void *ctx, const char *mdname, void *provkey,
 {
     TPM2_SIGNATURE_CTX *sctx = ctx;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_rsa_signature_digest_init\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     DBG("SIGN DIGEST_INIT rsa MD=%s\n", mdname);
     sctx->pkey = provkey;
 
@@ -381,6 +474,12 @@ tpm2_ecdsa_signature_digest_init(void *ctx, const char *mdname, void *provkey,
 {
     TPM2_SIGNATURE_CTX *sctx = ctx;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_ecdsa_signature_digest_init\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     DBG("SIGN DIGEST_INIT ecdsa MD=%s\n", mdname);
     sctx->pkey = provkey;
 
@@ -391,6 +490,12 @@ tpm2_ecdsa_signature_digest_init(void *ctx, const char *mdname, void *provkey,
 static int
 digest_start(TPM2_SIGNATURE_CTX *sctx)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c digest_start\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (sctx->signature) {
         DBG("SIGN DIGEST_RESTART\n");
         free(sctx->signature);
@@ -407,6 +512,12 @@ tpm2_signature_digest_update(void *ctx,
 {
     TPM2_SIGNATURE_CTX *sctx = ctx;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_signature_digest_update\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (sctx->hashSequence.handle == ESYS_TR_NONE && !digest_start(sctx))
         return 0;
 
@@ -420,6 +531,12 @@ digest_sign_calculate(TPM2_SIGNATURE_CTX *sctx)
     TSS2_RC r;
     TPM2B_DIGEST *digest = NULL;
     TPMT_TK_HASHCHECK *validation = NULL;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c digest_sign_calculate\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     DBG("SIGN DIGEST_SIGN_CALCULATE\n");
     if (!tpm2_hash_sequence_complete((TPM2_HASH_SEQUENCE *)sctx, &digest, &validation))
@@ -443,6 +560,12 @@ tpm2_signature_digest_sign_final(void *ctx,
                                  unsigned char *sig, size_t *siglen, size_t sigsize)
 {
     TPM2_SIGNATURE_CTX *sctx = ctx;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_signature_digest_sign_final\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (!sctx->signature) {
         /* it is possible to digest an empty sequence without calling update */
@@ -468,6 +591,12 @@ tpm2_signature_digest_sign(void *ctx, unsigned char *sig, size_t *siglen,
     TPM2_SIGNATURE_CTX *sctx = ctx;
     TPM2B_DIGEST *digest = NULL;
     TPMT_TK_HASHCHECK *validation = NULL;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_signature_digest_sign\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (sig == NULL) {
         DBG("SIGN DIGEST_SIGN estimate\n");
@@ -512,6 +641,12 @@ tpm2_signature_digest_verify_final(void *ctx, const unsigned char *sig, size_t s
     TPMT_TK_VERIFIED *validation = NULL;
     TPM2_SIGNATURE_CTX *sctx = ctx;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_signature_digest_verify_final\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     DBG("SIGN DIGEST_VERIFY_FINAL\n");
     if (!set_signature_buffer(&signature, &sctx->pkey->data.pub.publicArea,
                               &sctx->signScheme, sig, siglen))
@@ -537,6 +672,12 @@ tpm2_signature_get_ctx_params(void *ctx, OSSL_PARAM params[])
     TPM2_SIGNATURE_CTX *sctx = ctx;
     OSSL_PARAM *p;
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_signature_get_ctx_params\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     if (params == NULL)
         return 1;
     TRACE_PARAMS("SIGN GET_CTX_PARAMS", params);
@@ -561,6 +702,12 @@ tpm2_signature_get_ctx_params(void *ctx, OSSL_PARAM params[])
 static const OSSL_PARAM *
 tpm2_signature_gettable_ctx_params(void *ctx, void *provctx)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_signature_gettable_ctx_params\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     static OSSL_PARAM gettable[] = {
         OSSL_PARAM_octet_string(OSSL_SIGNATURE_PARAM_ALGORITHM_ID, NULL, 0),
         OSSL_PARAM_END
@@ -574,6 +721,12 @@ tpm2_rsa_signature_set_ctx_params(void *ctx, const OSSL_PARAM params[])
 {
     TPM2_SIGNATURE_CTX *sctx = ctx;
     const OSSL_PARAM *p;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_rsa_signature_set_ctx_params\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (params == NULL)
         return 1;
@@ -623,6 +776,12 @@ tpm2_rsa_signature_set_ctx_params(void *ctx, const OSSL_PARAM params[])
 static const OSSL_PARAM *
 tpm2_rsa_signature_settable_ctx_params(void *ctx, void *provctx)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_rsa_signature_settable_ctx_params\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     static OSSL_PARAM settable[] = {
         /* mandatory parameters used by openssl */
         OSSL_PARAM_utf8_string(OSSL_SIGNATURE_PARAM_PAD_MODE, NULL, 0),
@@ -639,6 +798,12 @@ tpm2_ecdsa_signature_set_ctx_params(void *ctx, const OSSL_PARAM params[])
 {
     TPM2_SIGNATURE_CTX *sctx = ctx;
     const OSSL_PARAM *p;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_ecdsa_signature_set_ctx_params\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (params == NULL)
         return 1;
@@ -660,6 +825,12 @@ tpm2_ecdsa_signature_set_ctx_params(void *ctx, const OSSL_PARAM params[])
 static const OSSL_PARAM *
 tpm2_ecdsa_signature_settable_ctx_params(void *ctx, void *provctx)
 {
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider_signature.c tpm2_ecdsa_signature_settable_ctx_params\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
     static OSSL_PARAM settable[] = {
         OSSL_PARAM_utf8_string(OSSL_SIGNATURE_PARAM_DIGEST, NULL, 0),
         OSSL_PARAM_END

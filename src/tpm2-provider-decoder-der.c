@@ -25,11 +25,18 @@ static OSSL_FUNC_decoder_newctx_fn tpm2_der_decoder_newctx;
 static OSSL_FUNC_decoder_freectx_fn tpm2_der_decoder_freectx;
 static OSSL_FUNC_decoder_decode_fn tpm2_der_decoder_decode;
 
+
 static void *
 tpm2_der_decoder_newctx(void *provctx)
 {
     TPM2_PROVIDER_CTX *cprov = provctx;
     TPM2_DER_DECODER_CTX *dctx = OPENSSL_zalloc(sizeof(TPM2_DER_DECODER_CTX));
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-decoder-der.c tpm2_der_decoder_newctx\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     if (dctx == NULL)
         return NULL;
@@ -43,6 +50,12 @@ static void
 tpm2_der_decoder_freectx(void *ctx)
 {
     TPM2_DER_DECODER_CTX *dctx = ctx;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-decoder-der.c tpm2_der_decoder_freectx\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     OPENSSL_clear_free(dctx, sizeof(TPM2_DER_DECODER_CTX));
 }
@@ -60,6 +73,12 @@ tpm2_der_decoder_decode(void *ctx, OSSL_CORE_BIO *cin, int selection,
     long der_len;
     OSSL_PARAM params[3];
     int res;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    DBG("\ntpm2-provider-decoder-der.c tpm2_der_decoder_decode\n\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     DBG("DER DECODER DECODE\n");
     if ((bin = BIO_new_from_core_bio(dctx->libctx, cin)) == NULL)
